@@ -1,0 +1,43 @@
+#!/bin/bash
+# Options parsing in bash, same as getopt but no fork
+# This is a TEMPLATE consisting of 3 sections, the ones not indented + intro
+# to be copy/pasted in your bash scripts. 
+# Get only what to paste (without the examples) by running this script itself.
+# shellcheck disable=SC2046
+[ -z "$*" ]&&sed -e '1,/^#--/d;/^[[:space:]]/d' $(realpath $(which "$0"))&&exit
+#
+# This lite version does not have the verbose option and convenience functions
+# But it one line smaller. It more of an example than really worth it
+#-----------------------------------------------------------------------------
+
+# User manual:
+USAGE=''
+    # Complete the string above, including the documentation of options
+
+# Options default values:
+    # Examples, replace with your code
+    value=default
+    n=0
+    gain=0
+
+# shellcheck disable=SC2015,SC2016,SC2034,SC2046,SC2089,SC2090,SC2219 #########
+{ _g='[ -n "$_a" ]&&OPTARG="${_a#=}"||{ let _n++;OPTARG="${@:$_n:1}";}';HASARG=\
+'eval eval "$_g";let "_n>$#"&&_E "Missing arg: $1"';_E(){ echo "***ERROR: $*" \
+>&2;exit 1;};nl=$'\n';while [[ $1 =~ ^-(-?[[:alnum:]]+)(=.*)?$ ]];do _n=1
+_s="${BASH_REMATCH[1]}";_a="${BASH_REMATCH[2]}";[[ $_s =~ ^- ]]&&{ _o=${_s:1}
+_s=;}||{ _o=${_s:0:1};_s=${_s:1};};while [ -n "$_o" ];do case "$_o" in
+#----options start-------------------------------------------------------
+	    
+    # Examples, replace with your code
+    medium|m) gain=5;;                 # long&short option without arg 
+    level|l) $HASARG; gain="$OPTARG";; # long&short option with arg 
+    n) let n++;;	               # with no argument
+    a) $HASARG; value="$OPTARG";;      # with an argument
+	    
+#----options end---------------------------------------------------------
+*)_E "Bad option: $1";;esac;_o=${_s:0:1};_s=${_s:1};_a=;done;shift $_n;done;}
+#----end of https://github.com/ColasNahaboo/bashoptions-(lite)-----------v1.0
+
+    # The rest of your code
+    echo "n=$n gain=$gain value=$value rest=$* USAGE=$USAGE"
+

@@ -1,0 +1,25 @@
+#!/bin/bash
+# Options parsing in bash, same as getopt but no fork
+# This is a TEMPLATE of the goodies of bashoptions to be copy/pasted in your
+# bash scripts if you want to use them without the rest of bashoptions.
+# Get only what to paste (without the examples) by running this script itself.
+# shellcheck disable=SC2046
+[ -z "$*" ]&&sed -e '1,/^#--/d;/^[[:space:]]/d' $(realpath $(which "$0"));exit
+#
+# Use always the first block, to define err, warn, E, En, nl
+# and then execute the verbose or terse mode if you
+# want the verbose or silent versions of functions V T, and variable v
+#-----------------------------------------------------------------------------
+
+#---- https://github.com/ColasNahaboo/bashoptions-(goodies)----------v1.0
+err(){ E "***ERROR: $*">&2; exit 1;};warn(){ E "###Warning: $*">&2;}
+E(){ echo "$@" >&2;};En(){ E -n "$@";};export nl=$'\n'
+#------------------------------------------------------------------------
+#----verbose mode--------------------------------------------------------
+T(){ local i;En "==";for i in "$@";do if [[ $i =~ [^_[:alnum:]] ]]; then
+En " $i";else En " $i=${!i}";fi;done;E;};V(){ E "== $*";};export v=true
+#------------------------------------------------------------------------
+
+#----terse mode----------------------------------------------------------
+V(){ :;};T(){ :;};export v=false
+#------------------------------------------------------------------------

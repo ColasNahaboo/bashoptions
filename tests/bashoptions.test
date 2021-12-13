@@ -1,0 +1,80 @@
+#!/bin/bash
+# run via tewiba
+[ -n "$TEWIBA" ] || exec tewiba -v "$0"
+
+# test of mix of options for bashoptions & bashoptions-lite
+
+# create a script, inserting the bashoptions sections
+# do this for bashoptions and then again for bashoptions-lite
+
+for tpl in bashoptions bashoptions-lite; do
+    if [ -s $tpl ]; then td=; elif [ -s ../$tpl ]; then td=../
+    elif [ -s ../src/$tpl ]; then td=../src/
+    else FERR No file $tpl found; fi
+
+export ts=$tmp.sh # the test script, that we generate here:
+#------------------------------------------------------------------
+cat >$ts <<\EOB
+# Help
+USAGE='my usage'
+# Default options
+value=none
+num=0
+gain=0
+EOB
+sed -n -e '/#####$/,/^#----.*options start/p' ${td}$tpl >>$ts
+cat >>$ts <<\EOB
+	    silent|s) gain=0;;
+            medium|m) gain=5;;       # long&short option without arg 
+            level|l) $HASARG; gain="$OPTARG";; # long&short option with arg 
+	    n) let num++;;	              # with no argument
+	    a) $HASARG; value="$OPTARG";;     # with an argument
+	                                      # two args
+EOB
+sed -n -e '/^#--*options end-/,/^#----/p' ${td}$tpl >>$ts
+cat >>$ts <<\EOB
+echo "gain=$gain num=$num value=$value ARGS=$*"
+EOB
+#------------------------------------------------------------------
+chmod a+x $ts
+
+TEST "==$tspl== Syntax of generated test file"
+if ! bash -n $ts; then
+    cp $ts /tmp/bashoptions-test.sh
+    TERR Syntax failed in generated script, copied in /tmp/bashoptions-test.sh
+fi
+
+TEST $tpl
+
+DOTEST -l OK1 -s 0 $ts ''
+DOTEST -l OK2 -s 0 $ts -s
+DOTEST -l OK3 -s 0 $ts -s -m
+DOTEST -l OK4 -s 0 $ts --silent
+DOTEST -l OK5 -s 0 $ts -s --level 6
+DOTEST -l OK6 -s 0 $ts -m --level=7 -n
+DOTEST -l OK7 -s 0 $ts -nms
+
+DOTEST -l Err1 -e '***ERROR: Bad option: --nope' $ts --nope
+DOTEST -l Err2 -e '***ERROR: Bad option: -x' $ts -x
+DOTEST -l Err3 -e '***ERROR: Missing arg: -slmy' $ts -slmy
+DOTEST -l Err4 -e '***ERROR: Missing arg: -l' $ts -l
+
+DOTEST -l 1 -o 'gain=3 num=1 value=bar ARGS=gee' $ts --level=3 -na bar gee
+DOTEST -l 2 -o 'gain=5 num=2 value=bar ARGS=gee' $ts -nanm bar gee
+DOTEST -l 3 -o 'gain=5 num=0 value=none ARGS=bar gee' $ts -m bar gee
+DOTEST -l 4 -o 'gain=6 num=0 value=none ARGS=bar gee' $ts -l 6 bar gee
+DOTEST -l 5 -o 'gain=6 num=2 value=none ARGS=bar gee' $ts -nln 6 bar gee
+DOTEST -l 6 -o 'gain=6 num=0 value=none ARGS=bar gee' $ts -l 6 bar gee
+DOTEST -l 7 -o 'gain=6 num=0 value=bar ARGS=gee' $ts -la 6 bar gee
+DOTEST -l 8 -o 'gain=5 num=0 value=yes ARGS=bar gee' $ts -ma yes bar gee
+DOTEST -l 9 -o 'gain=6 $a 7 num=0 value=bar ARGS=gee' $ts -mla '6 $a 7' bar gee
+DOTEST -l 10-o  'gain=1&2 num=1 value=! ARGS=f&o g$e' $ts -lan '1&2' ! f\&o g\$e
+DOTEST -l 11-o  'gain=1&2 num=1 value=! ARGS=f&o g$e' $ts -nal ! '1&2' f\&o g\$e
+
+done
+
+# In case of any error, save the generated script for inspection
+let 'TFAILS > 0' && T=/tmp/bashoptions-test-full.sh && cp $ts $T &&
+echo "== Note: generated test script copied in $T"
+
+TEND

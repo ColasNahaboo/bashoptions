@@ -1,0 +1,39 @@
+#!/bin/bash
+# Options parsing in bash, using bash builtin getopts (single letter options)
+# This is a TEMPLATE consisting of 2 sections, the ones not indented + intro
+# to be copy/pasted in your bash scripts.
+# Get only what to paste (without the examples) by running this script itself.
+# shellcheck disable=SC2046
+[ -z "$*" ]&&sed -e '1,/^#--/d;/^[[:space:]]/d' $(realpath $(which "$0"));exit
+#
+# This version just promotes one use of getopts, no really added value.
+#-----------------------------------------------------------------------------
+
+# User manual:
+USAGE=''
+    # Complete the string above, including the documentation of options
+
+# Options default values:
+    # Examples, replace with your code
+    value=default
+    n=true
+
+# Options list
+OPTIONS=''
+    # Options list for getopts, with : appended for args: e.g: "na:"
+    # 'hv?' will be added automatically
+
+#-----------------------------------------------------------------------
+OPTIND=1;while getopts "${OPTIONS}" _o;do case "$_o" in
+#------------single letter options start--------------------------------
+
+    # Examples, replace with your code
+    n) value=false;;	            # with no argument
+    a) value="$OPTARG";;            # with an argument
+
+#------------single letter options end----------------------------------
+esac;done;shift $((OPTIND-1))
+#----end of https://github.com/ColasNahaboo/bashoptions-(getopts-lite)-----v1.0
+
+    # The rest of your code
+    echo "n=$n value=[$value] rest=[$*] $USAGE"

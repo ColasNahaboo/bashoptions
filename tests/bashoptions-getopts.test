@@ -1,0 +1,93 @@
+#!/bin/bash
+# run via tewiba
+[ -n "$TEWIBA" ] || exec tewiba -v "$0"
+
+# test of mix of options for bashoptions-getopts
+
+# create a script, inserting the bashoptions sections
+
+for tpl in bashoptions-getopts; do
+    if [ -s $tpl ]; then td=; elif [ -s ../$tpl ]; then td=../
+    elif [ -s ../src/$tpl ]; then td=../src/
+    else FERR No file $tpl found; fi
+
+ts=$tmp.sh # the test script, that we generate here:
+#------------------------------------------------------------------
+cat >$ts <<\EOB
+# Help
+USAGE='my usage'
+# Default options
+    gain=-1
+    num=0
+    value=none
+# Options list
+OPTIONS='sl:na:A'
+EOB
+sed -n -e '/#####$/,/^#----.*options start/p' ${td}$tpl >>$ts
+cat >>$ts <<\EOB
+    s) gain=0;;			# without an argument
+    l) gain="$OPTARG";;		# with an argument
+    n) let num++;;		# counts number of -n
+    a) value="$OPTARG";;	# with an argument
+    A) value=all;;		# without an argument
+EOB
+sed -n -e '/^#--*single.*end-/,/^#----/p' ${td}$tpl >>$ts
+cat >>$ts <<\EOB
+echo "gain=$gain num=$num value=$value ARGS=$*"
+EOB
+#------------------------------------------------------------------
+chmod a+x $ts
+
+TEST "==$tpl== Syntax of generated test file"
+if ! bash -n $ts; then
+    cp $ts /tmp/bashoptions-test.sh
+    FERR Syntax failed in generated script, copied in /tmp/bashoptions-test.sh
+fi
+
+TEST valid options
+for opts in '' -s '-s -l 1' '-sl 2' '-ls 3 -n' '-lnas 4'; do
+    $ts $opts || TERR failure
+done
+
+testcmp(){ 
+  [ "$res" == "$exp" ] || 
+  TERR "testcmp $1${nl}Result:   \"$res\"${nl}Expected: \"$exp\""
+}
+TEST testcmp
+
+res=$($ts --nope 2>&1); exp='***ERROR: Bad option: --, -h for help.'
+testcmp Err1
+res=$($ts -x 2>&1); exp='***ERROR: Bad option: -x, -h for help.'
+testcmp Err2
+res=$($ts -sym 2>&1); exp='***ERROR: Bad option: -y, -h for help.'
+testcmp Err1
+
+res=$($ts -l 3 -na bar gee); exp='gain=3 num=1 value=bar ARGS=gee'
+testcmp 1
+res=$($ts -snnna foo bar\&gee); exp='gain=0 num=3 value=foo ARGS=bar&gee'
+testcmp 2
+res=$($ts -s bar gee); exp='gain=0 num=0 value=none ARGS=bar gee'
+testcmp 3
+res=$($ts -l 6 bar gee); exp='gain=6 num=0 value=none ARGS=bar gee'
+testcmp 4
+res=$($ts -nnl 6 bar gee); exp='gain=6 num=2 value=none ARGS=bar gee'
+testcmp 5
+res=$($ts -l 6 bar gee); exp='gain=6 num=0 value=none ARGS=bar gee'
+testcmp 6
+res=$($ts -l 6 -a bar gee); exp='gain=6 num=0 value=bar ARGS=gee'
+testcmp 7
+res=$($ts -sa yes bar gee); exp='gain=0 num=0 value=yes ARGS=bar gee'
+testcmp 8
+res=$($ts -Al '6 $a 7' gee); exp='gain=6 $a 7 num=0 value=all ARGS=gee'
+testcmp 9
+res=$($ts -nsl '1&2' -a! f\&o g\$e); exp='gain=1&2 num=1 value=! ARGS=f&o g$e'
+testcmp 10
+cp $ts /tmp/bo
+
+done
+
+# In case of any error, save the generated script for inspection
+let 'TFAILS > 0' && T=/tmp/bashoptions-test-getopts.sh && cp $ts $T &&
+echo "== Note: generated test script copied in $T"
+
+TEND

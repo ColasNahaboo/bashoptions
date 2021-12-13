@@ -62,7 +62,7 @@ And after the last block, you can run your code, knowing that the rest of non-op
  `bashoptions-getopts-lite`... is just basically getopts.
 
 ## Why?
-I have been using them in my scripts for decades, but I decided to package them more formally, with the set of convenience functions I use everywhere. In all honesty, they are not useful now that `getopts` and `getopt` exist, but they may appeal to people wanting long options but not wanting to fork an external program for them. And they can be a demonstration of the power of bash programming.
+I have been using them in my scripts for decades, but I decided to package them more formally, with the set of convenience functions I use everywhere. In all honesty, they are not so useful now that `getopts` and `getopt` exist, but they may appeal to people wanting long options but not wanting to fork an external program for them. And they can be a demonstration of the power of bash programming.
 
 ## Goodies
 `Bashoptions` and `bashoptions-getopts` define some useful functions and variables for your bash scripting needs. If you do not want them, just use `bashoptions-lite` or `getopt`.
